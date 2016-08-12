@@ -89,7 +89,7 @@ def get_image_digest(service, allow_push=False):
             "required to generate a proper image digest for the bundle. Specify "
             "an image repo and tag with the 'image' option.".format(s=service))
 
-    _, _, separator = parse_repository_tag(service.options['image'])
+    repo, tag, separator = parse_repository_tag(service.options['image'])
     # Compose file already uses a digest, no lookup required
     if separator == '@':
         return service.options['image']
@@ -104,9 +104,11 @@ def get_image_digest(service, allow_push=False):
             .format(service=service.name, action=action))
 
     if image['RepoDigests']:
-        # TODO: pick a digest based on the image tag if there are multiple
-        # digests
-        return image['RepoDigests'][0]
+        # Find digest that matches image repo
+        digest = next(
+            (x for x in image['RepoDigests'] if x.startswith(repo)), None)
+        if digest:
+            return digest
 
     if 'build' not in service.options:
         raise NeedsPull(service.image_name)

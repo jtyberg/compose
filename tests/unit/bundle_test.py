@@ -21,9 +21,19 @@ def mock_service():
 
 def test_get_image_digest_exists(mock_service):
     mock_service.options['image'] = 'abcd'
-    mock_service.image.return_value = {'RepoDigests': ['digest1']}
+    mock_service.image.return_value = {'RepoDigests': ['abcd@digest1']}
     digest = bundle.get_image_digest(mock_service)
-    assert digest == 'digest1'
+    assert digest == 'abcd@digest1'
+
+
+def test_get_image_digest_multiple_digests(mock_service):
+    mock_service.options['image'] = 'localhost:5000/redis:alpine'
+    mock_service.image.return_value = {'RepoDigests': [
+        'redis@digest1',
+        'localhost:5000/redis@digest2'
+    ]}
+    digest = bundle.get_image_digest(mock_service)
+    assert digest == 'localhost:5000/redis@digest2'
 
 
 def test_get_image_digest_image_uses_digest(mock_service):
